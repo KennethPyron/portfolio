@@ -1,3 +1,12 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import Student
+
+
+class MyAdminSite(admin.AdminSite):
+    site_header = "Monty Python administration"
+
+
+admin_site = MyAdminSite(name="myadmin")
+admin_site.register(Student)
+
