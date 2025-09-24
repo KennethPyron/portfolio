@@ -1,7 +1,32 @@
 from django.db import models
+from django.urls import reverse
+
+class Portfolio(models.Model):
+    title = models.CharField(max_length=200)
+    about = models.TextField(blank=True)
+    contact_email = models.CharField(max_length=200)
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
+    
+    def get_absolute_url(self):
+        return reverse('portfolio-detail', args=[str(self.id)])
+
+
+class Project(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.title
+    
+    def get_absolute_url(self):
+        return reverse('Project-detail', args=[str(self.id)])
 
 class Student(models.Model):
-    # List of choices for major value in database, human readable name
+   
     MAJOR = (
         ('CSCI-BS', 'BS in Computer Science'),
         ('CPEN-BS', 'BS in Computer Engineering'),
@@ -13,4 +38,14 @@ class Student(models.Model):
     )
     name = models.CharField(max_length=200)
     email = models.CharField("UCCS Email", max_length=200)
-    major = models.CharField(max_length=200, choices=MAJOR, blank=True)
+    major = models.CharField(max_length=200, choices=MAJOR,)
+    Portfolio = models.OneToOneField(Portfolio, on_delete=models.CASCADE, null=True, blank=True, related_name='student')
+
+
+   
+    def __str__(self):
+        return self.name
+    
+
+    def get_absolute_url(self):
+        return reverse('student-detail', args=[str(self.id)])
