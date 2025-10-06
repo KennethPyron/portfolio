@@ -1,9 +1,180 @@
 {% extends "portfolio_app/base_template.html" %}
 
-<!-- Replace block content in base_template.html -->
+{% block title %}Home - UCCS Portfolio System{% endblock %}
+
 {% block content %}
-<h1>Computer Science Portfolios</h1>
+<div class="row fade-in">
+    <div class="col-12">
+        <div class="page-header mb-4 text-center">
+            <h1 class="display-4">UCCS Computer Science Portfolios</h1>
+            <p class="lead">Showcasing student projects and achievements</p>
+        </div>
+    </div>
+</div>
 
-<h2>More to come from [Kenneth]</h2>
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card stats-card h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="stats-icon me-3">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div>
+                    <h3 class="mb-0">{{ total_portfolios }}</h3>
+                    <p class="text-muted mb-0">Active Portfolios</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card stats-card h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="stats-icon me-3">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <h3 class="mb-0">{{ total_students }}</h3>
+                    <p class="text-muted mb-0">Students</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card stats-card h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="stats-icon me-3">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div>
+                    <h3 class="mb-0">{{ total_projects }}</h3>
+                    <p class="text-muted mb-0">Projects</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- Search Bar -->
+<div class="row mb-4">
+    <div class="col-12">
+        <form method="get" action="{% url 'index' %}">
+            <div class="search-bar">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" name="search" class="form-control" placeholder="Search portfolios by title, description, or student name..." value="{{ search_query }}">
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2><i class="fas fa-briefcase me-2"></i>Active Portfolios</h2>
+            <span class="badge bg-primary fs-6">{{ active_portfolios|length }} Portfolio{{ active_portfolios|length|pluralize }}</span>
+        </div>
+
+        {% if active_portfolios %}
+            <div class="row">
+                {% for portfolio in active_portfolios %}
+                <div class="col-md-6 mb-4">
+                    <div class="card portfolio-card {% if portfolio.is_active %}active-portfolio{% endif %} h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ portfolio.title }}</h5>
+                            <p class="card-text flex-grow-1">{{ portfolio.about|truncatewords:20|default:"No description available." }}</p>
+                            <div class="mt-auto">
+                                <p class="card-text"><small class="text-muted"><i class="fas fa-envelope me-1"></i>{{ portfolio.contact_email }}</small></p>
+                                {% if portfolio.student %}
+                                    <p class="card-text"><small class="text-muted"><i class="fas fa-user me-1"></i>{{ portfolio.student.name }}</small></p>
+                                {% endif %}
+                                <div class="btn-action-group mt-2">
+                                    <a href="{% url 'portfolio_detail' portfolio.id %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>View Portfolio
+                                    </a>
+                                    {% if portfolio.student %}
+                                        <a href="{% url 'student_detail' portfolio.student.id %}" class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-user me-1"></i>View Student
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info text-center py-5 empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <h4>No Portfolios Found</h4>
+                <p class="mb-3">{% if search_query %}No portfolios match your search criteria.{% else %}No active portfolios available at the moment.{% endif %}</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'portfolio_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create First Portfolio
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'student_list' %}" class="btn btn-outline-primary btn-action">
+                        <i class="fas fa-users"></i>View All Students
+                    </a>
+                    <a href="{% url 'project_list' %}" class="btn btn-outline-primary btn-action">
+                        <i class="fas fa-tasks"></i>View All Projects
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'portfolio_create' %}" class="btn btn-success btn-action">
+                            <i class="fas fa-plus"></i>Create Portfolio
+                        </a>
+                        <a href="{% url 'project_create' %}" class="btn btn-success btn-action">
+                            <i class="fas fa-plus"></i>Add New Project
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Students with Portfolios</h5>
+            </div>
+            <div class="card-body">
+                {% if students_with_portfolios %}
+                    <div class="list-group list-group-flush">
+                        {% for student in students_with_portfolios|slice:":5" %}
+                        <a href="{% url 'student_detail' student.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ student.name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ student.get_major_display }}</small>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% if students_with_portfolios|length > 5 %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'student_list' %}" class="btn btn-sm btn-outline-primary">View All Students</a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-3 empty-state">
+                        <i class="fas fa-user-graduate fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No students with portfolios yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

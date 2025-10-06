@@ -1,0 +1,49 @@
+{% extends "portfolio_app/base_template.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="display-5">Students</h1>
+    <span class="badge bg-primary fs-6">{{ students|length }} Students</span>
+</div>
+
+<div class="row mt-4">
+    {% for student in students %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card student-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title">{{ student.name }}</h5>
+                    {% if student.Portfolio %}
+                        <span class="badge bg-success">Has Portfolio</span>
+                    {% endif %}
+                </div>
+                
+                <p class="card-text">
+                    <strong><i class="fas fa-book me-2"></i>Major:</strong> {{ student.get_major_display }}<br>
+                    <strong><i class="fas fa-envelope me-2"></i>Email:</strong> {{ student.email }}
+                </p>
+                
+                <div class="btn-group w-100" role="group">
+                    <a href="{% url 'student_detail' student.id %}" class="btn btn-primary">
+                        <i class="fas fa-user me-1"></i> Details
+                    </a>
+                    {% if student.Portfolio %}
+                        <a href="{% url 'portfolio_detail' student.Portfolio.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-folder me-1"></i> Portfolio
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info text-center py-4">
+            <i class="fas fa-info-circle fa-2x mb-3"></i>
+            <h4>No Students Found</h4>
+            <p class="mb-0">No students are currently registered in the system.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

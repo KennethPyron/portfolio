@@ -1,0 +1,66 @@
+{% extends "portfolio_app/base_template.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'project_list' %}">Projects</a></li>
+                <li class="breadcrumb-item active">{{ project.title }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-5">{{ project.title }}</h1>
+            <div>
+                <a href="{% url 'project_update' project.id %}" class="btn btn-warning">
+                    <i class="fas fa-edit me-2"></i> Edit
+                </a>
+                <a href="{% url 'project_delete' project.id %}" class="btn btn-danger">
+                    <i class="fas fa-trash me-2"></i> Delete
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-align-left me-2"></i>Description</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ project.description|linebreaks }}</p>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <p><strong><i class="fas fa-folder me-2"></i>Portfolio:</strong> 
+                            <a href="{% url 'portfolio_detail' project.portfolio.id %}">{{ project.portfolio.title }}</a>
+                        </p>
+                        {% if project.portfolio.student %}
+                        <p><strong><i class="fas fa-user me-2"></i>Student:</strong> 
+                            <a href="{% url 'student_detail' project.portfolio.student.id %}">{{ project.portfolio.student.name }}</a>
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong><i class="fas fa-envelope me-2"></i>Contact:</strong> {{ project.portfolio.contact_email }}</p>
+                        <p><strong><i class="fas fa-circle me-2"></i>Portfolio Status:</strong> 
+                            <span class="badge {% if project.portfolio.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ project.portfolio.is_active|yesno:"Active,Inactive" }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <a href="{% url 'project_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Projects
+            </a>
+            <a href="{% url 'project_create' %}" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i> Create New Project
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
