@@ -1,0 +1,55 @@
+{% extends "portfolio_app/base_template.html" %}
+{% load django_bootstrap5 %}
+
+{% block title %}{{ title }} - UCCS Portfolio System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'student_list' %}">Students</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-user-graduate me-2"></i>{{ title }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% if student %}{% url 'student_detail' student.id %}{% else %}{% url 'student_list' %}{% endif %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Student
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5><i class="fas fa-info-circle me-2"></i>Guidelines</h5>
+                <ul class="mb-0">
+                    <li>Use your official UCCS email address (@uccs.edu)</li>
+                    <li>Profile pictures should be professional headshots</li>
+                    <li>Maximum file size for images: 5MB</li>
+                    <li>All fields marked with an asterisk (*) are required</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
