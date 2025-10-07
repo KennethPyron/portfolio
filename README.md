@@ -29,7 +29,7 @@ A Django-based web application for managing student portfolios and projects. Thi
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repository-url>
+git clone <https://github.com/KennethPyron/portfolio.git>
 cd portfolio
 ```
 
