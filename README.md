@@ -157,10 +157,4 @@ Key settings in `django_project/settings.py`:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## License
 
-This project is created for educational purposes.
-
-## Contact
-
-For questions or support, please contact the repository maintainer.
