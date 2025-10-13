@@ -1,11 +1,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count
 from .models import Student, Portfolio, Project
-from .forms import PortfolioForm, ProjectForm, StudentForm
+from .forms import PortfolioForm, ProjectForm, StudentForm, CreateUserForm
+from django.contrib.auth.models import Group
 
 
 def is_staff_user(user):
@@ -14,19 +16,10 @@ def is_staff_user(user):
 
 
 def index(request):
-    """Display home page of active portfolios with search"""
-    search_query = request.GET.get('search', '')
-
+    """Display home page of active portfolios"""
     active_portfolios = Portfolio.objects.filter(is_active=True)
 
-    if search_query:
-        active_portfolios = active_portfolios.filter(
-            Q(title__icontains=search_query) |
-            Q(about__icontains=search_query) |
-            Q(student__name__icontains=search_query)
-        ).distinct()
-
-    students_with_portfolios = Student.objects.filter(portfolio__isnull=False).distinct()
+    students_with_portfolios = Student.objects.filter(Portfolio__isnull=False).distinct()
 
     # Get recent projects
     recent_projects = Project.objects.select_related('portfolio').all()[:6]
@@ -40,7 +33,6 @@ def index(request):
         'active_portfolios': active_portfolios,
         'students_with_portfolios': students_with_portfolios,
         'recent_projects': recent_projects,
-        'search_query': search_query,
         'total_portfolios': total_portfolios,
         'total_students': total_students,
         'total_projects': total_projects,
@@ -50,7 +42,7 @@ def index(request):
 def portfolio_detail(request, portfolio_id):
     """Display portfolio details"""
     portfolio = get_object_or_404(Portfolio, id=portfolio_id)
-    projects = Project.objects.filter(portfolio=portfolio).order_by('-created_at')
+    projects = Project.objects.filter(portfolio=portfolio)
     student = getattr(portfolio, 'student', None)
 
     return render(request, 'portfolio_app/portfolio_detail.html', {
@@ -61,6 +53,7 @@ def portfolio_detail(request, portfolio_id):
 
 
 @login_required
+@permission_required('portfolio_app.add_portfolio', raise_exception=True)
 def portfolio_create(request):
     """Form to create new portfolio"""
     if request.method == 'POST':
@@ -81,6 +74,7 @@ def portfolio_create(request):
 
 
 @login_required
+@permission_required('portfolio_app.change_portfolio', raise_exception=True)
 def portfolio_update(request, portfolio_id):
     """Form to update portfolio"""
     portfolio = get_object_or_404(Portfolio, id=portfolio_id)
@@ -104,7 +98,7 @@ def portfolio_update(request, portfolio_id):
 
 
 @login_required
-@user_passes_test(is_staff_user)
+@permission_required('portfolio_app.delete_portfolio', raise_exception=True)
 def portfolio_delete(request, portfolio_id):
     """Delete portfolio"""
     portfolio = get_object_or_404(Portfolio, id=portfolio_id)
@@ -122,9 +116,6 @@ def portfolio_delete(request, portfolio_id):
 def project_list(request):
     """Display project list with search, filter, and pagination"""
     search_query = request.GET.get('search', '')
-    status_filter = request.GET.get('status', '')
-    tag_filter = request.GET.get('tag', '')
-    sort_by = request.GET.get('sort', '-created_at')
 
     projects = Project.objects.select_related('portfolio').all()
 
@@ -132,29 +123,8 @@ def project_list(request):
     if search_query:
         projects = projects.filter(
             Q(title__icontains=search_query) |
-            Q(description__icontains=search_query) |
-            Q(tags__icontains=search_query)
+            Q(description__icontains=search_query)
         )
-
-    # Apply status filter
-    if status_filter:
-        projects = projects.filter(status=status_filter)
-
-    # Apply tag filter
-    if tag_filter:
-        projects = projects.filter(tags__icontains=tag_filter)
-
-    # Apply sorting
-    valid_sorts = ['title', '-title', 'created_at', '-created_at', 'updated_at', '-updated_at']
-    if sort_by in valid_sorts:
-        projects = projects.order_by(sort_by)
-    else:
-        projects = projects.order_by('-created_at')
-
-    # Get all unique tags
-    all_tags = set()
-    for project in Project.objects.all():
-        all_tags.update(project.get_tags_list())
 
     # Pagination
     paginator = Paginator(projects, 9)  # 9 projects per page
@@ -170,11 +140,6 @@ def project_list(request):
     return render(request, 'portfolio_app/project_list.html', {
         'projects': projects_page,
         'search_query': search_query,
-        'status_filter': status_filter,
-        'tag_filter': tag_filter,
-        'sort_by': sort_by,
-        'all_tags': sorted(all_tags),
-        'status_choices': Project.STATUS_CHOICES,
     })
 
 
@@ -190,6 +155,7 @@ def project_detail(request, project_id):
 
 
 @login_required
+@permission_required('portfolio_app.add_project', raise_exception=True)
 def project_create(request):
     """Form to create project"""
     if request.method == 'POST':
@@ -210,6 +176,7 @@ def project_create(request):
 
 
 @login_required
+@permission_required('portfolio_app.change_project', raise_exception=True)
 def project_update(request, project_id):
     """Form to update project"""
     project = get_object_or_404(Project, id=project_id)
@@ -233,6 +200,7 @@ def project_update(request, project_id):
 
 
 @login_required
+@permission_required('portfolio_app.delete_project', raise_exception=True)
 def project_delete(request, project_id):
     """Form to delete project"""
     project = get_object_or_404(Project, id=project_id)
@@ -259,8 +227,7 @@ def student_list(request):
     if search_query:
         students = students.filter(
             Q(name__icontains=search_query) |
-            Q(email__icontains=search_query) |
-            Q(bio__icontains=search_query)
+            Q(email__icontains=search_query)
         )
 
     # Apply major filter
@@ -282,15 +249,15 @@ def student_list(request):
         'students': students_page,
         'search_query': search_query,
         'major_filter': major_filter,
-        'major_choices': Student.MAJOR_CHOICES,
+        'major_choices': Student.MAJOR,
     })
 
 
 def student_detail(request, student_id):
     """Display student details"""
     student = get_object_or_404(Student, id=student_id)
-    portfolio = getattr(student, 'portfolio', None)
-    projects = Project.objects.filter(portfolio=portfolio).order_by('-created_at') if portfolio else []
+    portfolio = student.Portfolio
+    projects = Project.objects.filter(portfolio=portfolio) if portfolio else []
 
     return render(request, 'portfolio_app/student_detail.html', {
         'student': student,
@@ -300,8 +267,9 @@ def student_detail(request, student_id):
 
 
 @login_required
+@permission_required('portfolio_app.add_student', raise_exception=True)
 def student_create(request):
-    """Form to create new student"""
+    """Form to create new student (staff only)"""
     if request.method == 'POST':
         form = StudentForm(request.POST, request.FILES)
         if form.is_valid():
@@ -320,6 +288,7 @@ def student_create(request):
 
 
 @login_required
+@permission_required('portfolio_app.change_student', raise_exception=True)
 def student_update(request, student_id):
     """Form to update student"""
     student = get_object_or_404(Student, id=student_id)
@@ -343,9 +312,9 @@ def student_update(request, student_id):
 
 
 @login_required
-@user_passes_test(is_staff_user)
+@permission_required('portfolio_app.delete_student', raise_exception=True)
 def student_delete(request, student_id):
-    """Delete student"""
+    """Delete student (staff only)"""
     student = get_object_or_404(Student, id=student_id)
 
     if request.method == 'POST':
@@ -356,3 +325,68 @@ def student_delete(request, student_id):
     return render(request, 'portfolio_app/student_confirm_delete.html', {
         'student': student
     })
+
+
+def registerPage(request):
+    """
+    User registration view that automatically:
+    1. Creates a new user account
+    2. Assigns the user to the 'student' group
+    3. Creates a Student profile linked to the user
+    4. Creates an initial Portfolio for the student
+
+    Note: The 'student' group must exist with proper permissions.
+    Run 'python manage.py setup_permissions' to create the group.
+    """
+    form = CreateUserForm()
+
+    if request.method == 'POST':
+        form = CreateUserForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            username = form.cleaned_data.get('username')
+
+            # Automatically assign user to 'student' group
+            try:
+                student_group = Group.objects.get(name='student')
+                user.groups.add(student_group)
+
+                # Create Student profile and Portfolio
+                portfolio = Portfolio.objects.create(
+                    title=f"{username}'s Portfolio",
+                    contact_email=user.email,
+                    is_active=False  # User can activate it later
+                )
+                student = Student.objects.create(
+                    user=user,
+                    name=username,
+                    email=user.email,
+                    Portfolio=portfolio
+                )
+
+                messages.success(
+                    request,
+                    f'Account successfully created for {username}! '
+                    f'You have been assigned student permissions. Please login.'
+                )
+            except Group.DoesNotExist:
+                messages.warning(
+                    request,
+                    f'Account created for {username}, but the "student" group does not exist. '
+                    f'Please contact an administrator to set up your permissions. '
+                    f'Run "python manage.py setup_permissions" to create the group.'
+                )
+
+            return redirect('login')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+
+    context = {'form': form}
+    return render(request, 'registration/register.html', context)
+
+
+def logoutUser(request):
+    """Custom logout view that handles both GET and POST requests"""
+    logout(request)
+    messages.success(request, 'You have been logged out successfully.')
+    return redirect('index')

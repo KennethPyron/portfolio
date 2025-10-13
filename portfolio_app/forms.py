@@ -1,5 +1,8 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.forms import ModelForm
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 from .models import Portfolio, Project, Student
 import re
 
@@ -47,7 +50,7 @@ class PortfolioForm(forms.ModelForm):
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ['title', 'description', 'portfolio', 'status', 'image', 'github_url', 'live_url', 'tags']
+        fields = ['title', 'description', 'portfolio']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -63,31 +66,9 @@ class ProjectForm(forms.ModelForm):
                 'class': 'form-select',
                 'required': True
             }),
-            'status': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'image': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/*'
-            }),
-            'github_url': forms.URLInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'https://github.com/username/repo'
-            }),
-            'live_url': forms.URLInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'https://example.com'
-            }),
-            'tags': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Python, Django, Web Development'
-            }),
         }
         labels = {
             'portfolio': 'Select Portfolio',
-            'github_url': 'GitHub Repository URL',
-            'live_url': 'Live Demo URL',
-            'tags': 'Tags (comma-separated)'
         }
 
     def clean_title(self):
@@ -96,18 +77,11 @@ class ProjectForm(forms.ModelForm):
             raise ValidationError('Title must be at least 3 characters long.')
         return title
 
-    def clean_image(self):
-        image = self.cleaned_data.get('image')
-        if image:
-            if image.size > 5 * 1024 * 1024:  # 5MB limit
-                raise ValidationError('Image file size cannot exceed 5MB.')
-        return image
-
 
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
-        fields = ['name', 'email', 'major', 'portfolio', 'profile_picture', 'bio', 'graduation_year']
+        fields = ['name', 'email', 'major', 'Portfolio']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -123,34 +97,13 @@ class StudentForm(forms.ModelForm):
                 'class': 'form-select',
                 'required': True
             }),
-            'portfolio': forms.Select(attrs={
+            'Portfolio': forms.Select(attrs={
                 'class': 'form-select'
-            }),
-            'profile_picture': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/*'
-            }),
-            'bio': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 4,
-                'placeholder': 'Tell us about yourself...'
-            }),
-            'graduation_year': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': '2025',
-                'min': '2020',
-                'max': '2030'
             }),
         }
 
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if email and not email.endswith('@uccs.edu'):
-            raise ValidationError('Please use a valid UCCS email address (@uccs.edu).')
-        return email
 
-    def clean_graduation_year(self):
-        year = self.cleaned_data.get('graduation_year')
-        if year and (year < 2020 or year > 2035):
-            raise ValidationError('Please enter a valid graduation year between 2020 and 2035.')
-        return year
+class CreateUserForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']

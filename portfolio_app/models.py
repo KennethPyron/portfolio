@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from django.contrib.auth.models import User
 
 class Portfolio(models.Model):
     title = models.CharField(max_length=200)
@@ -40,6 +41,7 @@ class Student(models.Model):
     email = models.CharField("UCCS Email", max_length=200)
     major = models.CharField(max_length=200, choices=MAJOR,)
     Portfolio = models.OneToOneField(Portfolio, on_delete=models.CASCADE, null=True, blank=True, related_name='student')
+    user = models.OneToOneField(User, null=True, on_delete=models.CASCADE)
 
 
    

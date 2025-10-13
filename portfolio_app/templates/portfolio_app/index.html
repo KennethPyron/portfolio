@@ -55,18 +55,6 @@
     </div>
 </div>
 
-<!-- Search Bar -->
-<div class="row mb-4">
-    <div class="col-12">
-        <form method="get" action="{% url 'index' %}">
-            <div class="search-bar">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" name="search" class="form-control" placeholder="Search portfolios by title, description, or student name..." value="{{ search_query }}">
-            </div>
-        </form>
-    </div>
-</div>
-
 <div class="row mt-4">
     <div class="col-lg-8">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -109,7 +97,7 @@
                     <i class="fas fa-info-circle"></i>
                 </div>
                 <h4>No Portfolios Found</h4>
-                <p class="mb-3">{% if search_query %}No portfolios match your search criteria.{% else %}No active portfolios available at the moment.{% endif %}</p>
+                <p class="mb-3">No active portfolios available at the moment.</p>
                 {% if user.is_authenticated %}
                     <a href="{% url 'portfolio_create' %}" class="btn btn-primary">
                         <i class="fas fa-plus me-2"></i>Create First Portfolio

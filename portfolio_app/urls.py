@@ -25,6 +25,8 @@ urlpatterns = [
     path('student/<int:student_id>/update/', views.student_update, name='student_update'),
     path('student/<int:student_id>/delete/', views.student_delete, name='student_delete'),
 
-    # Authentication URLs (Django built-in)
+    # Authentication URLs
+    path('accounts/logout/', views.logoutUser, name='logout'),
+    path('accounts/register', views.registerPage, name='register_page'),
     path('accounts/', include('django.contrib.auth.urls')),
 ]
