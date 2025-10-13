@@ -32,7 +32,7 @@ A Django-based web application for managing student portfolios and projects. Thi
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/KennethPyron/portfolio.git
 cd portfolio
 ```
 
@@ -240,4 +240,3 @@ This command:
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
